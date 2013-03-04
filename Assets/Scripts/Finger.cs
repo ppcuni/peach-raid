@@ -11,12 +11,21 @@ public class Finger : MonoBehaviour
 	{
 		Vector3 pos = new Vector3(-100,-100,0);
 		var isInput = false;
-#if UNITY_IPHONE || UNITY_ANDROID
+#if (UNITY_IPHONE || UNITY_ANDROID) && !UNITY_EDITOR
 		if(Input.touchCount > 0)
 		{
-			pos = camera.ScreenToWorldPoint(Input.GetTouch(0).position);
-			pos.z = 0;
-			isInput = true;
+			var touch = Input.GetTouch(0);
+			if(touch.phase == TouchPhase.Began || touch.phase == TouchPhase.Moved)
+			{
+				pos = camera.ScreenToWorldPoint(touch.position);
+				pos.z = 0;
+				isInput = true;
+			}
+		}
+		if(Input.touchCount == 0)
+		{
+			if(OnRelease != null)
+				OnRelease();
 		}
 #else
 		if(Input.GetMouseButton(0))

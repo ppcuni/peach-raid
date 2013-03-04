@@ -52,22 +52,27 @@ public class Game : MonoBehaviour
 		finger.OnRelease += OnFingerRelease;
 	}
 	
-	void CreatePanel(int x, int y)
+	Panel[] GetAllPanels()
 	{
-		CreatePanel(x, y, false);
+		return panels.GetComponentsInChildren<Panel>();
 	}
 	
-	void CreatePanel(int x, int y, bool isSpecial)
+	void CreatePanel(int x, int y)
+	{
+		CreatePanel(x, y, null);
+	}
+	
+	void CreatePanel(int x, int y, int? specialPanelType)
 	{
 		var panel = Instantiate(panelPrefab) as GameObject;
 		panel.transform.parent = panels.transform;
-		var panelType = isSpecial ? 5 : Randomizer.Next(0, 5);
+		var panelType = specialPanelType ?? Randomizer.Next(0, 5);
 		panel.GetComponent<Panel>().Initialize(x, y, panelType);
 	}
 	
 	void GrayoutPanels(int exclutionType)
 	{
-		foreach(var x in panels.GetComponentsInChildren<Panel>())
+		foreach(var x in GetAllPanels())
 		{
 			x.Grayout(x.Type != exclutionType);
 		}
@@ -75,7 +80,7 @@ public class Game : MonoBehaviour
 	
 	void HighlightPanels()
 	{
-		foreach(var x in panels.GetComponentsInChildren<Panel>())
+		foreach(var x in GetAllPanels())
 		{
 			x.Grayout(false);
 		}
@@ -86,6 +91,7 @@ public class Game : MonoBehaviour
 		var count = selectedPanels.IndexOf(panel) + 1;
 		if(count > 0)
 		{
+			// 選択してたパネルの上を通ったら、そこまでのルートをリセット.
 			var unselectedPanels = selectedPanels.Skip(count);
 			foreach(var x in unselectedPanels)
 			{
@@ -95,6 +101,7 @@ public class Game : MonoBehaviour
 		}
 		else if(selectedPanels.Count == 0)
 		{
+			// 最初に選択したのパネル.
 			panel.Select(true);
 			selectedPanels.Add(panel);
 			// つながらないパネルの色を暗くする.
@@ -106,6 +113,11 @@ public class Game : MonoBehaviour
 			selectedPanels.Add(panel);
 		}
 		
+		DrawLine();
+	}
+	
+	void DrawLine()
+	{
 		var length = selectedPanels.Count;
 		if(length >= 2)
 		{
@@ -126,64 +138,92 @@ public class Game : MonoBehaviour
 	
 	void OnFingerRelease()
 	{
+		if(selectedPanels.Count >= 1 && selectedPanels[0].Type == Panel.Bomb)
+		{
+			// ボム消したらランダムに1種類のきのこ全部消える.
+			var type = Randomizer.Next(0, 5);
+			selectedPanels.AddRange(GetAllPanels().Where(x => x.Type == type));
+			RemoveAndFillPanels();
+			return;
+		}
 		if(selectedPanels.Count < 3)
 		{
-			foreach(var x in selectedPanels)
-			{
-				x.Select(false);
-			}
+			// ボム以外は選択しているパネルが3個以下なら消えない.
+			UnSelect();
+			return;
 		}
 		else
 		{
-			int? specialPanel = null;
-			if(selectedPanels.Count >= 5)
-			{
-				specialPanel = Randomizer.Next(0, selectedPanels.Count - 1);
-			}
+			// 3個以上選してると消える.
+			RemoveAndFillPanels();
 			
-			// パネル消す.
-			for(var i = 0; i < selectedPanels.Count; ++i)
-			{
-				var x = selectedPanels[i];
-				Score += x.Score * (10 + i) / 10 ;
-				Destroy(x.gameObject);
-			}
-			
-			var allPanels = panels.GetComponentsInChildren<Panel>();
-			var deletedCountsByLine = new List<int>(FieldSize){0,0,0,0,0,0};
-			for( var i = 0; i < FieldSize; ++i)
-			{
-				var deletedPanels = selectedPanels.Where(x => x.Position.x == i);
-				deletedCountsByLine[i] = deletedPanels.Count();
-				var linePanels = allPanels
-					.Where(x => x.Position.x == i && !deletedPanels.Any(y => x == y))
-					.Select(x => new {Panel = x, UnderCount = deletedPanels.Count(y => y.Position.y < x.Position.y)});
-				
-				// 消えてないパネルの位置再設定.
-				foreach(var x in linePanels)
-				{
-					x.Panel.RePosition((int)(x.Panel.Position.y - x.UnderCount));
-				}
-				
-				// 消えた分補充.
-				for(var y = (FieldSize - deletedCountsByLine[i]); y < FieldSize; ++y)
-				{
-					var isSpecial = specialPanel.HasValue && specialPanel == 0;
-					CreatePanel(i, y, isSpecial);
-					if(specialPanel.HasValue) specialPanel--;
-				}
-			}
-			
+			// 指定ターン終わったらゲームオーバー.
 			RemainingTurn--;
 			if(RemainingTurn <= 0)
 			{
 				var gameOver = Instantiate(gameoverPrefab);
 			}
 		}
-		
+	}
+	
+	void UnSelect()
+	{
+		foreach(var x in selectedPanels)
+		{
+			x.Select(false);
+		}
+		ClearSelectedPanels();
+	}
+	
+	void ClearSelectedPanels()
+	{
 		selectedPanels.Clear();
 		lineRenderer.SetVertexCount(0);
 		// 全部のパネルの色を明るくする.
 		HighlightPanels();
+	}
+	
+	void RemoveAndFillPanels()
+	{
+		int? specialPanel = null;
+		int specialPanelType = selectedPanels[0].Type != Panel.Peach ? Panel.Peach : Panel.Bomb;
+		var comboCount = specialPanelType == Panel.Peach ? 5 : 3;
+		if(selectedPanels.Count >= comboCount)
+		{
+			specialPanel = Randomizer.Next(0, selectedPanels.Count - 1);
+		}
+		
+		// パネル消す.
+		for(var i = 0; i < selectedPanels.Count; ++i)
+		{
+			var x = selectedPanels[i];
+			Score += x.Score * (10 + i) / 10 ;
+			Destroy(x.gameObject);
+		}
+		
+		var deletedCountsByLine = new List<int>(FieldSize){0,0,0,0,0,0};
+		for( var i = 0; i < FieldSize; ++i)
+		{
+			var deletedPanels = selectedPanels.Where(x => x.Position.x == i);
+			deletedCountsByLine[i] = deletedPanels.Count();
+			var linePanels = GetAllPanels()
+				.Where(x => x.Position.x == i && !deletedPanels.Any(y => x == y))
+				.Select(x => new {Panel = x, UnderCount = deletedPanels.Count(y => y.Position.y < x.Position.y)});
+			
+			// 消えてないパネルの位置再設定.
+			foreach(var x in linePanels)
+			{
+				x.Panel.RePosition((int)(x.Panel.Position.y - x.UnderCount));
+			}
+			
+			// 消えた分補充.
+			for(var y = (FieldSize - deletedCountsByLine[i]); y < FieldSize; ++y)
+			{
+				var specialType = specialPanel.HasValue && specialPanel == 0 ? (int?)specialPanelType : null;
+				CreatePanel(i, y, specialType);
+				if(specialPanel.HasValue) specialPanel--;
+			}
+		}
+		ClearSelectedPanels();
 	}
 }

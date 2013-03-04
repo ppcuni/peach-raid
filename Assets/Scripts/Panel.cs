@@ -11,8 +11,11 @@ public class Panel : MonoBehaviour
 	private Texture[] TypeTextures = null;
 	private readonly int[] TypeScores = new int[]
 	{
-		10,10,10,10,10,200
+		10, 10, 10, 10, 10, 200, 500
 	};
+	
+	public static readonly int Peach = 5;
+	public static readonly int Bomb = 6;
 	
 	public void Initialize(int x, int y, int type)
 	{

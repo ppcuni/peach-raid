@@ -5,7 +5,7 @@ public abstract class ModalPanel : MonoBehaviour
 {
 	void Update()
 	{
-#if UNITY_IPHONE || UNITY_ANDROID
+#if (UNITY_IPHONE || UNITY_ANDROID) && !UNITY_EDITOR
 		if(Input.touchCount > 0)
 		{
 			OnTap();
@@ -31,6 +31,6 @@ public class Title : ModalPanel
 	void OnGUI()
 	{
 		GUI.color = Color.black;
-		GUI.Label(new Rect(120,150,300,200), "Tap to Start\n\n Tap and Draw\nSame Kinokos");
+		GUI.Label(new Rect(120,100,200,400), "Tap to Start\n\nTap and Draw\nSame Kinokos\n\nA peach of the high score panel comes when you remove more than five.");
 	}
 }

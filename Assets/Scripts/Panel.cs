@@ -6,20 +6,18 @@ public class Panel : MonoBehaviour
 	public int Type { get; private set; }
 	public Vector2 Position { get; private set; }
 	private readonly int Margin = 22;
-	private readonly Color[] TypeColors = new Color[]
+	
+	[SerializeField]
+	private Texture[] TypeTextures = null;
+	private readonly int[] TypeScores = new int[]
 	{
-		Color.white,
-		Color.yellow,
-		Color.black,
-		Color.gray,
-		Color.green,
-		Color.blue,
+		10,10,10,10,10,200
 	};
 	
 	public void Initialize(int x, int y, int type)
 	{
 		Type = type;
-		this.renderer.material.color = TypeColors[Type];
+		this.renderer.material.mainTexture = TypeTextures[Type];
 		Position = new Vector2(x, y);
 		var pos = new Vector3(x * Margin, y * Margin, 0);
 		this.transform.localPosition = pos;
@@ -36,21 +34,27 @@ public class Panel : MonoBehaviour
 		Position = new Vector2(Position.x, y);
 	}
 	
-	static readonly Vector3 Selected = new Vector3(17, 17, 17);
+	static readonly Vector3 Selected = new Vector3(16, 16, 16);
 	static readonly Vector3 Normal = new Vector3(20, 20, 20);
 	
 	public void Select(bool isSelect)
 	{
 		if(isSelect)
 		{
-			this.renderer.material.color = Color.red;
 			this.transform.localScale = Selected;
 		}
 		else
 		{
-			this.renderer.material.color = TypeColors[Type];
 			this.transform.localScale = Normal;
 		}
+	}
+	
+	public void Grayout(bool isGrayout)
+	{
+		if(isGrayout)
+			this.renderer.material.color = Color.gray;
+		else
+			this.renderer.material.color = Color.white;
 	}
 	
 	public bool IsNeighbourWithSameType(Panel other)
@@ -58,4 +62,6 @@ public class Panel : MonoBehaviour
 		var distance = Vector2.Distance(this.Position, other.Position);
 		return distance < 1.5f && this.Type == other.Type;
 	}
+	
+	public int Score { get { return TypeScores[Type]; } }
 }

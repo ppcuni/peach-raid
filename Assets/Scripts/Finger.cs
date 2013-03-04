@@ -6,7 +6,7 @@ public class Finger : MonoBehaviour
 {
 	[SerializeField]
 	private new Camera camera = null;
-
+	
 	void Update()
 	{
 		Vector3 pos = new Vector3(-100,-100,0);

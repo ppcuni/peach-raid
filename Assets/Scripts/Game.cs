@@ -6,6 +6,7 @@ using System.Collections.Generic;
 public class Game : MonoBehaviour
 {
 	const int FieldSize = 6;
+	const int MaxTurn = 32;
 	
 	[SerializeField]
 	private GameObject panels = null;
@@ -14,11 +15,16 @@ public class Game : MonoBehaviour
 	[SerializeField]
 	private GameObject panelPrefab = null;
 	[SerializeField]
+	private GameObject gameoverPrefab = null;
+	[SerializeField]
 	private LineRenderer lineRenderer = null;
 	
 	private List<Panel> selectedPanels = new List<Panel>();
 	
 	private System.Random Randomizer = new System.Random();
+	
+	public int Score { get; set; }
+	public int RemainingTurn { get; set; }
 	
 	void Awake()
 	{
@@ -27,6 +33,9 @@ public class Game : MonoBehaviour
 	
 	void Start()
 	{
+		Score = 0;
+		RemainingTurn = MaxTurn;
+		
 		for(var y = 0; y < FieldSize; ++y)
 			for(var x = 0; x < FieldSize; ++x)
 		{
@@ -45,10 +54,31 @@ public class Game : MonoBehaviour
 	
 	void CreatePanel(int x, int y)
 	{
+		CreatePanel(x, y, false);
+	}
+	
+	void CreatePanel(int x, int y, bool isSpecial)
+	{
 		var panel = Instantiate(panelPrefab) as GameObject;
 		panel.transform.parent = panels.transform;
-		var panelType = Randomizer.Next(0, 5);
+		var panelType = isSpecial ? 5 : Randomizer.Next(0, 5);
 		panel.GetComponent<Panel>().Initialize(x, y, panelType);
+	}
+	
+	void GrayoutPanels(int exclutionType)
+	{
+		foreach(var x in panels.GetComponentsInChildren<Panel>())
+		{
+			x.Grayout(x.Type != exclutionType);
+		}
+	}
+	
+	void HighlightPanels()
+	{
+		foreach(var x in panels.GetComponentsInChildren<Panel>())
+		{
+			x.Grayout(false);
+		}
 	}
 	
 	void OnFingerHitPanel(Panel panel)
@@ -67,6 +97,8 @@ public class Game : MonoBehaviour
 		{
 			panel.Select(true);
 			selectedPanels.Add(panel);
+			// つながらないパネルの色を暗くする.
+			GrayoutPanels(panel.Type);
 		}
 		else if(selectedPanels.Last().IsNeighbourWithSameType(panel))
 		{
@@ -86,6 +118,10 @@ public class Game : MonoBehaviour
 				lineRenderer.SetPosition(i, pos);
 			}
 		}
+		else
+		{
+			lineRenderer.SetVertexCount(0);
+		}
 	}
 	
 	void OnFingerRelease()
@@ -99,9 +135,17 @@ public class Game : MonoBehaviour
 		}
 		else
 		{
-			// パネル消す.
-			foreach(var x in selectedPanels)
+			int? specialPanel = null;
+			if(selectedPanels.Count >= 5)
 			{
+				specialPanel = Randomizer.Next(0, selectedPanels.Count - 1);
+			}
+			
+			// パネル消す.
+			for(var i = 0; i < selectedPanels.Count; ++i)
+			{
+				var x = selectedPanels[i];
+				Score += x.Score * (10 + i) / 10 ;
 				Destroy(x.gameObject);
 			}
 			
@@ -124,12 +168,22 @@ public class Game : MonoBehaviour
 				// 消えた分補充.
 				for(var y = (FieldSize - deletedCountsByLine[i]); y < FieldSize; ++y)
 				{
-					CreatePanel(i, y);
+					var isSpecial = specialPanel.HasValue && specialPanel == 0;
+					CreatePanel(i, y, isSpecial);
+					if(specialPanel.HasValue) specialPanel--;
 				}
+			}
+			
+			RemainingTurn--;
+			if(RemainingTurn <= 0)
+			{
+				var gameOver = Instantiate(gameoverPrefab);
 			}
 		}
 		
 		selectedPanels.Clear();
 		lineRenderer.SetVertexCount(0);
+		// 全部のパネルの色を明るくする.
+		HighlightPanels();
 	}
 }

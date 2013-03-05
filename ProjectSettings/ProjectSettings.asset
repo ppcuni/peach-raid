@@ -14,8 +14,8 @@ PlayerSettings:
   productName: PeachRaid
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
-  defaultScreenWidth: 640
-  defaultScreenHeight: 960
+  defaultScreenWidth: 320
+  defaultScreenHeight: 480
   defaultScreenWidthWeb: 320
   defaultScreenHeightWeb: 480
   m_RenderingPath: 1
@@ -24,7 +24,7 @@ PlayerSettings:
   m_UseDX11: 0
   iosShowActivityIndicatorOnLoading: -1
   androidShowActivityIndicatorOnLoading: -1
-  displayResolutionDialog: 1
+  displayResolutionDialog: 0
   allowedAutorotateToPortrait: 1
   allowedAutorotateToPortraitUpsideDown: 1
   allowedAutorotateToLandscapeRight: 1

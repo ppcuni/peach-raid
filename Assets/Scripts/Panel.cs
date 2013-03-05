@@ -9,6 +9,7 @@ public class Panel : MonoBehaviour
 	
 	[SerializeField]
 	private Texture[] TypeTextures = null;
+	// todo 多態化.
 	private readonly int[] TypeScores = new int[]
 	{
 		10, 10, 10, 10, 10, 200, 500

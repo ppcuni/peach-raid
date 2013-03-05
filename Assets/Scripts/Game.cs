@@ -78,6 +78,14 @@ public class Game : MonoBehaviour
 		}
 	}
 	
+	void GrayoutPanels(IEnumerable<int> exclutionTypes)
+	{
+		foreach(var x in GetAllPanels())
+		{
+			x.Grayout(!exclutionTypes.Any(y => x.Type == y));
+		}
+	}
+	
 	void HighlightPanels()
 	{
 		foreach(var x in GetAllPanels())
@@ -98,6 +106,14 @@ public class Game : MonoBehaviour
 				x.Select(false);
 			}
 			selectedPanels = selectedPanels.Take(count).ToList();
+		}
+		else if(selectedPanels.Count == 0 && panel.Type == Panel.Bomb)
+		{
+			var type = Randomizer.Next(0, 5);
+			selectedPanels.Add(panel);
+			selectedPanels.AddRange(GetAllPanels().Where(x => x.Type == type));
+			GrayoutPanels(new int[]{panel.Type, type});
+			return;
 		}
 		else if(selectedPanels.Count == 0)
 		{
@@ -141,8 +157,6 @@ public class Game : MonoBehaviour
 		if(selectedPanels.Count >= 1 && selectedPanels[0].Type == Panel.Bomb)
 		{
 			// ボム消したらランダムに1種類のきのこ全部消える.
-			var type = Randomizer.Next(0, 5);
-			selectedPanels.AddRange(GetAllPanels().Where(x => x.Type == type));
 			RemoveAndFillPanels();
 			return;
 		}

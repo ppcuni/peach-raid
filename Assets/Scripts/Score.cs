@@ -9,6 +9,6 @@ public class Score : MonoBehaviour
 	void OnGUI()
 	{
 		GUI.Label(new Rect(10,0,200,100), "Score:" + game.Score.ToString("00000"));
-		GUI.Label(new Rect(220,0,200,100), "Remaining Turn:" + game.RemainingTurn.ToString("00"));
+		GUI.Label(new Rect(200,0,200,100), "Remaining Turn:" + game.RemainingTurn.ToString("00"));
 	}
 }

@@ -19,3 +19,5 @@ Library/InspectorExpandedItems.asset
 
 Assembly-CSharp*
 UnityVS.project.*
+Assets/UnityVS.*
+Assets/UnityVS/*

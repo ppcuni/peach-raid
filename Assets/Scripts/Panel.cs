@@ -21,7 +21,7 @@ public class Panel : MonoBehaviour
 	public void Initialize(int x, int y, int type)
 	{
 		Type = type;
-		this.renderer.material.mainTexture = TypeTextures[Type];
+		this.GetComponent<Renderer>().material.mainTexture = TypeTextures[Type];
 		Position = new Vector2(x, y);
 		var pos = new Vector3(x * Margin, y * Margin, 0);
 		this.transform.localPosition = pos;
@@ -56,9 +56,9 @@ public class Panel : MonoBehaviour
 	public void Grayout(bool isGrayout)
 	{
 		if(isGrayout)
-			this.renderer.material.color = Color.gray;
+			this.GetComponent<Renderer>().material.color = Color.gray;
 		else
-			this.renderer.material.color = Color.white;
+			this.GetComponent<Renderer>().material.color = Color.white;
 	}
 	
 	public bool IsNeighbourWithSameType(Panel other)
